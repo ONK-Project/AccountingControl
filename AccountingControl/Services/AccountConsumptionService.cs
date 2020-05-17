@@ -10,40 +10,40 @@ namespace AccountingControl.Services
 {
     public class AccountConsumptionService : IAccountConsumptionService
     {
-        private readonly IMongoCollection<Submission> _submissions;
-        private readonly ISubmissionService _submissionService;
-        public AccountConsumptionService(IAccountControlDBSettings settings, ISubmissionService submissionService)
+        private readonly IMongoCollection<AccountConsumption> _accountConsumptions;
+        public AccountConsumptionService(IAccountControlDBSettings settings)
         {
-            _submissionService = submissionService;
+            var client = new MongoClient(settings.ConnectionString);
+            var database = client.GetDatabase(settings.DatabaseName);
+            _accountConsumptions = database.GetCollection<AccountConsumption>(settings.SubmissionCollectionName);
         }
 
-        public async Task<AccountConsumption> GetAccountConsumption(long accountId, int days, string type)
+        public async Task<List<AccountConsumption>> GetAccountConsumption(long accountId)
         {
-            var accountConsumption = new AccountConsumption();
-            accountConsumption.Price = new SubmissionPrice();
+            var filter = new ExpressionFilterDefinition<AccountConsumption>(x =>
+                    accountId == x.Account.AccountId);
 
-            accountConsumption.Type = type;
-            accountConsumption.From = DateTime.UtcNow.AddDays(-days);
-            accountConsumption.To = DateTime.UtcNow;
-            var test = _submissionService.GetSubmissions(new ExpressionFilterDefinition<Submission>(x => true == true)).Result.ToList();
+            var ac =  await _accountConsumptions.FindAsync<AccountConsumption>(filter);
+            return ac.ToList();
+        }
 
-            var submissions = _submissionService.GetSubmissions(new ExpressionFilterDefinition<Submission>(x =>
-                    DateTime.UtcNow.AddDays(-days) <= x.DateTime &&
-                    accountId == x.MeteringUnit.AccountId &&
-                    type == x.MeteringUnit.Type))
-                .Result
-                .ToList();
+        public AccountConsumption getLastInsertedAccountConsumption()
+        {
+            var filter = new ExpressionFilterDefinition<AccountConsumption>(x =>
+                    true == true);
 
-            foreach (var submission in submissions)
-            {
-                accountConsumption.RessourceUsage += submission.RessourceUsage;
-                accountConsumption.Price.TotalCost += submission.SubmissionPrice.TotalCost;
-            }
+            var accountConsumptions = _accountConsumptions.Find(filter).SortBy(x => x.EventSequence).ToList();
 
-            accountConsumption.UnitOfMeassure = submissions.First()?.UnitOfMeassure;
-            accountConsumption.Price.Currency = submissions.First()?.SubmissionPrice?.Currency;
+            if (!accountConsumptions.Any())
+                return null;
 
-            return accountConsumption;
+            var ac = accountConsumptions.First();
+            return ac;
+        }
+
+        public Task PostAccountConsumption(AccountConsumption accountConsumption)
+        {
+            return _accountConsumptions.InsertOneAsync(accountConsumption);
         }
     }
 }

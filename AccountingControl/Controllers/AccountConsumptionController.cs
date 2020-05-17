@@ -24,9 +24,9 @@ namespace AccountingControl.Controllers
         }
 
         [HttpGet]
-        public async Task<AccountConsumption> PostAccountConsumption(int days, long accountId, string type)
+        public async Task<List<AccountConsumption>> GetAccountConsumption(long accountId)
         {
-            var accountConsumption = await AccountConsumptionService.GetAccountConsumption(accountId, days, type);
+            var accountConsumption = await AccountConsumptionService.GetAccountConsumption(accountId);
             return accountConsumption;
         }
     }
