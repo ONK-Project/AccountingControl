@@ -100,7 +100,6 @@ namespace AccountingControl
                 DatabaseName = Configuration["AccountControlDBSettings:DatabaseName"],
                 SubmissionCollectionName = Configuration["AccountControlDBSettings:SubmissionCollectionName"],
             });
-
             
             var subscriber = new Subscriber(KubeMQServerAddress);
             SubscribeRequest subscribeRequest = new SubscribeRequest()
