@@ -26,7 +26,6 @@ spec:
       targetPort: 27017
   selector:
     app: mongodb
-  type: LoadBalancer
 ---  
 apiVersion: v1
 kind: Pod
