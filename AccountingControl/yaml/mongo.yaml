@@ -5,6 +5,8 @@ metadata:
   annotations: 
   name: grp4-mongodb-pvc
   namespace: proj-gr4
+  labels:
+    app: mongodb
 spec:
   accessModes: [ "ReadWriteOnce" ]
   storageClassName: "mongodb"
@@ -49,9 +51,9 @@ spec:
         name: mongodb
         resources:
           limits:
-            memory: 2Gi
-          requests:
             memory: 1Gi
+          requests:
+            memory: 256Mi
         volumeMounts:
         - mountPath: "data/db"
           name: "mongodb-data"
